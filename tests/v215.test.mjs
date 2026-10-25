@@ -14,7 +14,7 @@ test('featured chest in first row and daily switch below it',()=>{
 });
 test('retains working intel progression and reward interaction',()=>{
  assert.ok(intel.includes('data-action="intel-open"'));
- assert.ok(intel.includes('unlockedIntel(rounds,dailyModes())'));
+ assert.ok(intel.includes('intelState(1)'));
  assert.ok(intel.includes('complete/total*100'));
  assert.ok(intel.includes('aria-valuenow="${complete}"'));
 });
