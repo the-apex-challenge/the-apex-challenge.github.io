@@ -1702,3 +1702,6 @@ html,body{background:#0d1012!important;color:var(--tac267-ink)}
  #app#app[data-screen="home"][data-session="daily"] .gtp246-home-core .tac276-intel-brief>.tac275-daily-date{grid-row:6!important}
  #app#app .tac276-intel-brief>.gtp239-reward-details{grid-column:1!important;grid-row:7!important}
 }
+
+/* V2.79: comfortable touch targets without changing the desktop header. */
+@media(max-width:700px){#app#app .gtp2-top-inner{min-height:68px!important}#app#app .top-actions .switch{min-height:44px!important}#app#app .gtp213-mobile-menu>summary{min-width:44px!important;min-height:44px!important;display:grid!important;place-items:center!important}}
