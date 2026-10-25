@@ -32,7 +32,7 @@ Deno.serve(async(req:Request)=>{
  let raw:string;try{raw=await req.text();}catch{return json({error:'Invalid request'},400,origin);}
  if(raw.length>16000)return json({error:'Payload too large'},413,origin);
  let payload:any;try{payload=JSON.parse(raw);}catch{return json({error:'Invalid JSON'},400,origin);}
- const day=new Date().toISOString().slice(0,10),isDual=payload?.protocol==='v218',isSingle=payload?.protocol==='v265';
+ const day=new Date().toISOString().slice(0,10),isDual=payload?.protocol==='v218',isClassic=payload?.protocol==='v278',isSingle=isClassic||payload?.protocol==='v265';
  const tracks=isSingle&&['full','signal'].includes(payload.difficulty)?[payload.difficulty]:isDual?['full','signal']:MODES;
  if(isSingle&&!['full','signal'].includes(payload.difficulty))return json({error:'Choose Full Scan or One Signal'},400,origin);
  if(typeof payload?.displayName!=='string'||!/^[A-Za-z0-9 _-]{3,18}$/.test(payload.displayName)||payload.day!==day||!payload.rounds||typeof payload.rounds!=='object'||Object.keys(payload.rounds).length!==tracks.length||tracks.some(track=>!Object.hasOwn(payload.rounds,track)))return json({error:'Invalid nickname, date or rounds'},400,origin);
@@ -41,7 +41,7 @@ Deno.serve(async(req:Request)=>{
  if(authError||!user||user.is_anonymous!==true)return json({error:'Invalid anonymous session'},401,origin);
  const answers=puzzleAnswers(day,legends),pivot=hash('gtp:v218:daily:'+day)%MODES.length;
  const schedule={full:MODES[pivot],signal:MODES[(pivot+2)%MODES.length]};
- if(isSingle){const r=payload.rounds[payload.difficulty];if(!r||r.mode!==payload.difficulty||r.gameMode!==(payload.legacyMigration===true?schedule[payload.difficulty]:schedule.full)||![0,120].includes(r.timeLimit))return json({error:'Daily difficulty configuration mismatch'},400,origin);}
+ if(isSingle){const r=payload.rounds[payload.difficulty];if(!r||r.mode!==payload.difficulty||r.gameMode!==(isClassic?'classic':payload.legacyMigration===true?schedule[payload.difficulty]:schedule.full)||![0,120].includes(r.timeLimit))return json({error:'Daily difficulty configuration mismatch'},400,origin);}
  if(isDual&&(!payload.rounds.full||!payload.rounds.signal||payload.rounds.full.mode!=='full'||payload.rounds.signal.mode!=='signal'||payload.rounds.full.gameMode!==schedule.full||payload.rounds.signal.gameMode!==schedule.signal||![0,120].includes(payload.rounds.full.timeLimit)||![0,120].includes(payload.rounds.signal.timeLimit)))return json({error:'Daily track configuration mismatch'},400,origin);
  if(isDual&&(!Number.isFinite(payload.rounds.full.finishedAt)||!Number.isFinite(payload.rounds.signal.startedAt)||payload.rounds.signal.startedAt<payload.rounds.full.finishedAt))return json({error:'Daily track order invalid'},400,origin);
  let base=0,allWon=true;const details:Record<string,unknown>={};
