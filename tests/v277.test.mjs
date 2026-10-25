@@ -6,6 +6,7 @@ import {chooseDaily,chosenDaily} from '../src/daily265.mjs';
 import {checkpointCount} from '../src/daily218.mjs';
 import {freshStore,loadStore,saveStore} from '../src/store.mjs';
 import {legends} from '../src/data.mjs';
+import {normalizeNickname,validNickname} from '../src/usability279.mjs';
 const app=readFileSync(new URL('../src/app.mjs',import.meta.url),'utf8');
 const section=(start,end)=>app.slice(app.indexOf(start),app.indexOf(end,app.indexOf(start)));
 test('completed history, rewards and difficulty stay on their original UTC day after reload',()=>{
@@ -21,7 +22,7 @@ test('completed history, rewards and difficulty stay on their original UTC day a
 });
 test('late score receipt belongs to yesterday even if midnight happens during submission',async()=>{
  let day='2026-10-23',resolve;const pending=new Promise(r=>resolve=r);
- const c={checkDailyRollover:()=>false,scoreSubmitting:false,leaderboardConfigured:()=>true,dailySummary:()=>({completed:true}),
+ const c={normalizeNickname,validNickname,checkDailyRollover:()=>false,scoreSubmitting:false,leaderboardConfigured:()=>true,dailySummary:()=>({completed:true}),
   store:{days:{},submittedDays:{}},today:()=>day,utcDay:()=>day,sharedDay:null,
   document:{getElementById:id=>id==='board-nickname'?{checkValidity:()=>true,value:'Tester'}:null,querySelector:()=>null},
   saveNickname:()=>{},buildSubmission:(_s,d)=>({day:d}),submitDaily:payload=>{assert.equal(payload.day,day);return pending;},sync:()=>{},showToast:()=>{}};
