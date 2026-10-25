@@ -10,12 +10,13 @@ async function client(){
 }
 export async function getBoards(day){
  const sb=await client();
- const [{data:daily,error:a},{data:overall,error:b}]=await Promise.all([
+ const [{data:daily,error:a},{data:overall,error:b},{data:weekly,error:c}]=await Promise.all([
   sb.rpc('get_daily_leaderboard',{p_day:day,p_limit:25}),
   sb.rpc('get_overall_leaderboard',{p_limit:25}),
+  sb.rpc('get_weekly_leaderboard',{p_day:day,p_limit:25}),
  ]);
- if(a||b)throw Error(a?.message||b?.message||'Leaderboard unavailable');
- return {daily:daily||[],overall:overall||[]};
+ if(a||b||c)throw Error(a?.message||b?.message||c?.message||'Leaderboard unavailable');
+ return {daily:daily||[],overall:overall||[],weekly:weekly||[]};
 }
 export async function submitDaily(payload){
  const sb=await signedInClient();
@@ -35,11 +36,12 @@ export async function triviaRequest(payload){
 }
 export async function getTriviaBoards(day){
  const sb=await client();
- const [{data:daily,error:a},{data:overall,error:b}]=await Promise.all([
+ const [{data:daily,error:a},{data:overall,error:b},{data:weekly,error:c}]=await Promise.all([
   sb.rpc('get_trivia_daily_leaderboard',{p_day:day,p_limit:25}),
-  sb.rpc('get_trivia_overall_leaderboard',{p_limit:25})]);
- if(a||b)throw Error(a?.message||b?.message||'Trivia leaderboard unavailable');
- return {daily:daily||[],overall:overall||[]};
+  sb.rpc('get_trivia_overall_leaderboard',{p_limit:25}),
+  sb.rpc('get_trivia_weekly_leaderboard',{p_day:day,p_limit:25})]);
+ if(a||b||c)throw Error(a?.message||b?.message||c?.message||'Trivia leaderboard unavailable');
+ return {daily:daily||[],overall:overall||[],weekly:weekly||[]};
 }
 
 /** Concurrent actions share one anonymous sign-in, retaining the existing player identity. */

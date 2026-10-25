@@ -1,3 +1,5 @@
+import {todayHub,statsPanel,archivePanel,resultPanel,tutorialPanel} from './experience280.mjs?v=2.80.0';
+import {collectedIntel,dailyShare,resetCountdown} from './progress280.mjs?v=2.80.0';
 const MODE_SYMBOLS267={"classic":"<path d=\"M18 3 33 33H24L18 18 12 33H3Z\"/><path d=\"m13 27 5-9 5 9\"/>","pixel":"<path d=\"M5 5h9v9H5zm17 0h9v9h-9zM5 22h9v9H5zm17 0h9v9h-9z\"/><path d=\"M14 14h8v8h-8\"/>","quote":"<path d=\"M6 20h8V9H6v11l-3 7h7zm17 0h8V9h-8v11l-3 7h7\"/>","ability":"<path d=\"m18 3 4 11 11 4-11 4-4 11-4-11L3 18l11-4Z\"/><path d=\"M18 9v18M9 18h18\"/>","emoji":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M11 22q7 8 14 0M12 12h1m10 0h1\"/>","trivia":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M4 18h28M18 4q-13 14 0 28M18 4q13 14 0 28M7 10h22M7 26h22\"/>"};
 import {chosenDaily,migrateSingleDaily,chooseDaily,DAILY_RULES} from './daily265.mjs?v=2.78.0';
 import {TIPS,unlockedIntel,tipFor} from './tips.mjs?v=2.43.0';
@@ -8,7 +10,7 @@ import {abilityCandidates,localAbilitySlugs} from './abilities.mjs?v=2.43.0';
 import {dailySpotlight,wheelChoices,wheelPick,destinationRotation} from './spotlight.mjs?v=2.43.0';
 import {playSound} from './audio.mjs?v=2.43.0&release=2.44.0&ui=2.62.0';
 import {paintPixelScene} from './pixel_scene.mjs?v=2.43.0&ui=2.63.0';
-import {getBoards, submitDaily, triviaRequest, getTriviaBoards, leaderboardConfigured} from './leaderboard.mjs?v=2.43.0&release=2.54.0';
+import {getBoards, submitDaily, triviaRequest, getTriviaBoards, leaderboardConfigured} from './leaderboard.mjs?v=2.43.0&release=2.54.0&ui=2.80.0&ui=2.80.0';
 import {dailySummary, buildSubmission} from './scoring.mjs?v=2.43.0&ui=2.78.0';
 import {DAILY_TRACKS,dailySchedule,dailyAnswers,currentDailyRounds,checkpointCount,dailyStats,rewardFor,intelFor,nextDailyStep} from './daily218.mjs?v=2.43.0&release=2.60.0&ui=2.65.0';
 import {loadStore,saveStore} from './store.mjs?v=2.43.0';
@@ -27,6 +29,7 @@ const SAVED_BOARD_KEY='gtp:boards:last-good:v265';
 let boardCacheDay=utcDay();
 const dailyModes=()=>chosenDaily(store.days,today())?[chosenDaily(store.days,today()).track]:['full'];
 let screen='home';
+let intelCategory='all',intelFavoriteOnly=false,tutorialOpen=false;
 let triviaRun=null;
 const triviaDailyRewardKey=day=>'gtp-trivia-daily-complete:'+day;
 function triviaRewardEarned(){try{return localStorage.getItem(triviaDailyRewardKey(today()))==='yes';}catch{return false;}}
@@ -49,7 +52,7 @@ let triviaRetryAt=0;
 let triviaBusy=false;
 let triviaMessage='';
 let triviaScoreTab='daily';
-let triviaBoard=(()=>{try{const saved=JSON.parse(localStorage.getItem('tac:trivia-boards:v265')||'null');return saved?.boards?{daily:saved.day===utcDay()?saved.boards.daily:[],overall:saved.boards.overall||[]}:null;}catch{return null}})();
+let triviaBoard=(()=>{try{const saved=JSON.parse(localStorage.getItem('tac:trivia-boards:v265')||'null');return saved?.boards?{daily:saved.day===utcDay()?saved.boards.daily:[],overall:saved.boards.overall||[],weekly:saved.day===utcDay()?saved.boards.weekly||[]:[]}:null;}catch{return null}})();
 let triviaBoardBusy=false;
 let triviaBoardError='';
 let triviaSubmitting=false;
@@ -63,7 +66,7 @@ let active='classic';
 let dailyTrack='full';
 let intelCheckpoint=1;
 let boardTab='daily';
-let boardData=(()=>{try{const d=JSON.parse(localStorage.getItem('gtp:boards:last-good:v265')||'null');return d?.boards?{daily:d.day===utcDay()?d.boards.daily:[],overall:d.boards.overall||[]}:null;}catch{return null}})();
+let boardData=(()=>{try{const d=JSON.parse(localStorage.getItem('gtp:boards:last-good:v265')||'null');return d?.boards?{daily:d.day===utcDay()?d.boards.daily:[],overall:d.boards.overall||[],weekly:d.day===utcDay()?d.boards.weekly||[]:[]}:null;}catch{return null}})();
 let boardLoading=false;
 let scoreSubmitting=false;
 let boardError='';
@@ -352,7 +355,7 @@ function home(){
  const done=checkpointCount(store.days,today());
  const intelDone=totalIntelCheckpoints();
  const spotlight=dailySpotlight(utcDay(),legends),scheduled=dailySchedule(today());
- const freeSelected=session==='unlimited';
+ const freeSelected=false;
  const dailyStatus=rounds.full?.finished?(rounds.signal?.finished?'BOTH DAILY CHALLENGES COMPLETE':`02 · ONE SIGNAL ${rounds.signal?.guesses?.length?'RESUME ('+rounds.signal.guesses.length+' GUESSES)':'UNLOCKED'}`):`01 · FULL SCAN ${rounds.full?.guesses?.length?'RESUME ('+rounds.full.guesses.length+' GUESSES)':'READY'}`;
  const cards=[
    ['classic','CLASSIC','Find the mystery Legend.','⌕'],
@@ -376,28 +379,21 @@ function home(){
   {id:'trivia',title:'TRIVIA',host:'crypto',description:'Crack five Apex intel questions.',action:'trivia',accent:'blue'}
  ];
  const heroCard=cfg=>{
- const selected=chosenDaily(store.days,today());const dailyMode=selected?.gameMode||'classic';const track=cfg.mode===dailyMode?(selected?.track||'full'):null;
- const locked=session==='daily'&&cfg.id!=='trivia'&&!track;
- const completed=session==='daily'&&(cfg.id==='trivia'?triviaRewardEarned():Boolean(track&&rounds[track]?.finished));
- const action=session==='daily'&&cfg.id!=='trivia'?(track?'home-daily':'open'):cfg.action;
- const r=track?rounds[track]:store.practice[cfg.mode];
- const state=session==='daily'?(cfg.id==='trivia'?(triviaRewardEarned()?'DAILY COMPLETED':'DAILY RANKED'):!track?'FREE PLAY ONLY TODAY':r?.finished?'DAILY COMPLETED':locked?'CHOOSE DIFFICULTY':r?.guesses?.length?'RESUME DAILY':'PLAY DAILY'):'FREE PLAY · UNRANKED';
- return `<button type="button" class="gtp239-mode-card gtp246-orbit-mode gtp239-${cfg.accent} ${completed?'tac-completed':''}" data-host="${cfg.host}" data-sound="${cfg.id}" data-action="${action}" ${cfg.mode?`data-mode="${cfg.mode}" data-session="unlimited"`:`data-trivia-mode="${session==='daily'?'daily':'practice'}"`} ${locked||completed?'disabled':''} aria-label="${cfg.title} — ${state}">
- <span class="gtp239-mode-ring gtp242-mode-medallion" aria-hidden="true"><span class="gtp242-ring-detail"></span><span class="gtp242-ring-notch"></span><svg class="tac267-mode-symbol" viewBox="0 0 36 36">${MODE_SYMBOLS267[cfg.id]}</svg></span>
- <span class="gtp239-mode-caption gtp242-mode-plate"><span class="gtp242-host-name">${cfg.host.toUpperCase()} · YOUR HOST</span><strong>${cfg.title}</strong><small>${cfg.description}</small><span class="tac-card-state">${state}</span></span></button>`;
+ const state='FREE PLAY · UNRANKED';
+ return `<button type="button" class="gtp239-mode-card gtp246-orbit-mode gtp239-${cfg.accent}" data-host="${cfg.host}" data-sound="${cfg.id}" data-action="${cfg.action}" ${cfg.mode?`data-mode="${cfg.mode}" data-session="unlimited"`:'data-trivia-mode="practice"'} aria-label="${cfg.title} — ${state}"><span class="gtp239-mode-ring gtp242-mode-medallion" aria-hidden="true"><span class="gtp242-ring-detail"></span><span class="gtp242-ring-notch"></span><svg class="tac267-mode-symbol" viewBox="0 0 36 36">${MODE_SYMBOLS267[cfg.id]}</svg></span><span class="gtp239-mode-caption gtp242-mode-plate"><span class="gtp242-host-name">${cfg.host.toUpperCase()} · YOUR HOST</span><strong>${cfg.title}</strong><small>${cfg.description}</small><span class="tac-card-state">${state}</span></span></button>`;
  };
  return `<main class="gtp219-home gtp222-home gtp239-home gtp246-outlands-home" aria-label="The Apex Challenge homepage">
   <div class="gtp219-backdrop" aria-hidden="true"></div>
   <div class="gtp239-sky" aria-hidden="true"><span class="gtp239-embers"></span></div>
   <div class="gtp238-mirage-duo gtp239-mirage-duo" aria-hidden="true"><span class="gtp238-mirage-figure gtp239-mirage-figure gtp238-mirage-left"></span><span class="gtp238-mirage-figure gtp239-mirage-figure gtp238-mirage-right"></span></div>
   <div class="gtp222-layout gtp239-layout">
-   <header class="gtp239-masthead"><span>THE APEX</span><h1>CHALLENGE</h1><small>APEX LEGENDS DAILY CHALLENGE</small></header>${playContext(session==='daily',{home:true})}
+   <header class="gtp239-masthead"><span>THE APEX</span><h1>CHALLENGE</h1><small>APEX LEGENDS DAILY CHALLENGE</small></header>${todayHub({day:today(),chosen:chosenDaily(store.days,today()),triviaDone:triviaRewardEarned(),streak:dailyStats(store.days,today()).current,receipt:store.submittedDays?.[today()]})}<div class="tac280-free-heading"><span class="kicker">PRACTICE WITHOUT LIMITS</span><h2>FREE PLAY.</h2><p>All six modes. Choose a mode and jump straight in.</p></div>
    <div class="gtp222-arena gtp239-arena gtp246-home-arena" aria-label="Six original game modes with individual Legend themes">
     <section class="gtp222-side gtp239-side gtp239-side-left" aria-label="Classic, Pixel and Quote">${showcase.slice(0,3).map(heroCard).join('')}</section>
     <section class="gtp222-core gtp239-core gtp246-home-core ${freeSelected?'tac268-free-core':''}" aria-label="Forbidden Intel Supply Bin">
       <div class="gtp239-bin-stage" role="img" aria-label="Halloween Mythic Supply Bin surrounded by candles and thorns"><span class="gtp239-bin-floor"></span><img class="gtp239-bin-image" src="./assets/decor/mythic-bin-halloween-v257.webp" alt="" loading="eager" decoding="async"/><span class="gtp239-bin-spark one">✦</span><span class="gtp239-bin-spark two">✦</span></div>
-      ${freeSelected?'':`<div class="gtp239-intel-panel gtp246-intel-hub tac276-intel-brief"><span class="gtp239-kicker">✦ YOUR DAILY OBJECTIVE ✦</span><h2>FORBIDDEN <em>INTEL</em></h2><p>Complete today’s Daily to unlock real Apex techniques and a drill to try next match.</p>
-       <button type="button" class="gtp239-open-intel" data-action="${lastUnlocked?'intel-open':'home-daily'}" ${lastUnlocked?`data-checkpoint="${intelTarget}"`:''}>◈ ${lastUnlocked?'OPEN MYTHIC INTEL':'PLAY DAILY · UNLOCK INTEL'} <span>↗</span></button>
+      ${freeSelected?'':`<div class="gtp239-intel-panel gtp246-intel-hub tac276-intel-brief"><span class="gtp239-kicker">✦ YOUR DAILY REWARDS ✦</span><h2>FORBIDDEN <em>INTEL</em></h2><p>Complete today’s Daily to unlock real Apex techniques and a drill to try next match.</p>
+       <button type="button" class="gtp239-open-intel" data-action="${lastUnlocked?'intel-open':'intel-archive'}" ${lastUnlocked?`data-checkpoint="${intelTarget}"`:''}>◈ ${lastUnlocked?'OPEN MYTHIC INTEL':'VIEW INTEL ARCHIVE'} <span>↗</span></button>
        <p class="tac275-reward-path">Daily puzzle → Field Intel · Daily Trivia → Rare Intel</p><small class="tac275-daily-date">${today()} · resets at 00:00 UTC${sharedDay?' · ARCHIVED DAY':''}</small><details class="gtp239-reward-details"><summary>INTEL CHECKPOINTS · ${intelDone} / 2 <span aria-hidden="true">⌄</span></summary>
         <div class="gtp219-rewards gtp239-reward-grid">${[1,2].map(n=>{const {unlocked,read}=intelState(n);return `<button type="button" class="${unlocked?(read?'gtp223-read':'gtp223-new'):''}" data-action="intel-open" data-checkpoint="${n}" ${unlocked?'':'disabled'}><span>${unlocked?(read?'✓':'✦'):'◇'} ${n===1?'DAILY PUZZLE':'DAILY TRIVIA'}</span><small>${unlocked?(read?'READ ✓':'NEW · OPEN ↗'):'LOCKED'}</small></button>`}).join('')}</div>
        </details>
@@ -712,6 +708,7 @@ function game(){
      ${round.timeLimit?`<span id="round-timer" class="game-timer ${urgent?'urgent':''}" aria-label="Time remaining"><i>◷</i><span>${timeLeft??120}s</span></span>`:''}
     </div>
    </header>
+   <button class="tac280-guide-link" data-action="tutorial-open">? SCANNER GUIDE</button>
    ${isDaily?'<section class="tac-daily-stage tac265-stage '+dailyTrack+'" role="status" aria-label="Daily puzzle difficulty"><b>DAILY PUZZLE · '+DAILY_RULES[dailyTrack].difficulty+' · '+modeTag+'</b><span>ONE MYSTERY LEGEND · '+(dailyTrack==='full'?'All six traits per guess · 5 guesses.':'One trait per guess · 6 guesses.')+' Difficulty locked for today.</span></section>':''}
    <div class="gtp230-arena ${board?'has-board':''} ${side?'has-side':''}">
     <section class="gtp230-main-clue" aria-label="Legend clue">
@@ -861,10 +858,12 @@ function triviaClockTick(){
 }
 function rankingColumn(kind,rows,{loading=false,error=''}={}){
  const trivia=kind==='trivia',title=trivia?'TRIVIA':'DAILY CHALLENGES';
+ const receipt=store.submittedDays?.[today()];
+ const ownName=!trivia&&boardTab==='daily'?receipt?.nickname:null;
  const subtitle=trivia?'Five questions · independent Trivia scores':'One Daily puzzle · Easy or Hard difficulty';
  const state=loading?'UPDATING':error?(rows.length?'OFFLINE · SAVED RESULTS':'CONNECTION UNAVAILABLE'):'LIVE RANKINGS';
  return `<section class="gtp27-board tac-ranking-column ${trivia?'is-trivia':'is-challenge'}" aria-label="${title} leaderboard"><header class="tac-ranking-header"><span>${trivia?'✧':'◈'}</span><div><h2>${title}</h2><p>${subtitle}</p></div><small>${state}</small></header>
- ${rows.length?`<div class="board-table">${rows.map((r,i)=>`<div class="board-row"><span>#${Number(r.position)||i+1}</span><strong>${esc(r.player_name||'Player')}</strong><b>${Number(r.score||0).toLocaleString('en-US')} ${trivia&&boardTab==='daily'?'/ 100':'PTS'}</b><small>${trivia?(boardTab==='daily'?Number(r.questions_correct??Math.floor(Number(r.score)/20))+' / 5 CORRECT':Number(r.days_played||0)+' DAYS · '+Number(r.perfect_days||0)+' PERFECT'):(boardTab==='daily'?'STREAK '+Number(r.streak||0):Number(r.days_played||0)+' DAYS · BEST '+Number(r.best_streak||0))}</small></div>`).join('')}</div>`:loading?'<div class="board-empty">LOADING RANKINGS…</div>':error?`<div class="board-empty">${esc(error)}</div>`:'<div class="board-empty">No scores for this period yet.</div>'}
+ ${rows.length?`<div class="board-table">${rows.map((r,i)=>`<div class="board-row ${ownName&&r.player_name===ownName?'tac280-your-score':''}"><span>#${Number(r.position)||i+1}</span><strong>${esc(r.player_name||'Player')}${ownName&&r.player_name===ownName?' <small>YOU</small>':''}</strong><b>${Number(r.score||0).toLocaleString('en-US')} ${trivia&&boardTab==='daily'?'/ 100':'PTS'}</b><small>${trivia?(boardTab==='daily'?Number(r.questions_correct??Math.floor(Number(r.score)/20))+' / 5 CORRECT':Number(r.days_played||0)+' DAYS · '+Number(r.perfect_days||0)+' PERFECT'):(boardTab==='daily'?'STREAK '+Number(r.streak||0):Number(r.days_played||0)+' DAYS · BEST '+Number(r.best_streak||0))}</small></div>`).join('')}</div>`:loading?'<div class="board-empty">LOADING RANKINGS…</div>':error?`<div class="board-empty">${esc(error)}</div>`:'<div class="board-empty tac280-empty-board"><b>SET THE FIRST SCORE.</b><p>This board is ready for a challenger.</p><button class="tac280-secondary" data-action="'+(trivia?'trivia':'home-daily')+'" '+(trivia?'data-trivia-mode="daily"':'')+'>PLAY '+(trivia?'DAILY TRIVIA':'DAILY')+' ↗</button></div>'}
  <footer class="tac-ranking-footer">${trivia?'Daily Trivia submits automatically when the run ends.':'Complete your Daily puzzle, then submit your score below.'}</footer></section>`;
 }
 function leaderboard(){
@@ -873,8 +872,8 @@ function leaderboard(){
  const isTodayComplete=summary.completed && !sharedDay && today()===utcDay();
  const existingSubmission=store.submittedDays?.[today()];
  const canSubmitDaily=isTodayComplete&&leaderboardConfigured()&&!existingSubmission;
- return `<main class="wrap gtp27-leaderboard" aria-labelledby="rank-title"><span class="kicker">PUBLIC HALL OF FAME / TWO RANKINGS</span><h1 id="rank-title">THE <em>LEADERBOARD.</em></h1><p class="lead">Two independent rankings: your selected Daily puzzle and Daily Trivia. Switch between Today and Overall to compare each board. Daily resets at 00:00 UTC. Easy earns 70% of the normal Daily score; Hard earns 100%, with the streak bonus applied afterwards. Free Play and Trivia Practice never affect rankings.</p>
- <div class="board-switch" role="group" aria-label="Choose leaderboard"><button data-action="board-tab" data-board="daily" class="${boardTab==='daily'?'active':''}" aria-pressed="${boardTab==='daily'}">◈ TODAY · ${esc(utcDay())}</button><button data-action="board-tab" data-board="overall" class="${boardTab==='overall'?'active':''}" aria-pressed="${boardTab==='overall'}">♛ OVERALL · ALL-TIME</button></div>
+ return `<main class="wrap gtp27-leaderboard" aria-labelledby="rank-title"><span class="kicker">PUBLIC HALL OF FAME / TWO RANKINGS</span><h1 id="rank-title">THE <em>LEADERBOARD.</em></h1><p class="lead">Your Daily puzzle and Daily Trivia have independent rankings. Easy earns 70%; Hard earns 100%, then streak bonuses apply. Today resets at 00:00 UTC; weekly rankings run Monday–Sunday UTC. Free Play stays unranked.</p>
+ <div class="board-switch" role="group" aria-label="Choose leaderboard"><button data-action="board-tab" data-board="daily" class="${boardTab==='daily'?'active':''}" aria-pressed="${boardTab==='daily'}">◈ TODAY · ${esc(utcDay())}</button><button data-action="board-tab" data-board="weekly" class="${boardTab==='weekly'?'active':''}" aria-pressed="${boardTab==='weekly'}">THIS WEEK · MON–SUN UTC</button><button data-action="board-tab" data-board="overall" class="${boardTab==='overall'?'active':''}" aria-pressed="${boardTab==='overall'}">♛ OVERALL · ALL-TIME</button></div>
  <div class="tac-rankings-grid">${rankingColumn('challenge',rows,{loading:boardLoading,error:boardError})}${rankingColumn('trivia',triviaBoard?.[boardTab]||[],{loading:triviaBoardBusy,error:triviaBoardError})}</div>
  <section class="gtp27-submit"><div><span class="kicker">YOUR DAILY SCORE</span><h2>${Number(existingSubmission?.totalScore??summary.score).toLocaleString('en-US')} <small>PTS (${existingSubmission?'SUBMITTED':'LOCAL PREVIEW'})</small></h2><p>${existingSubmission?`✓ DAILY SCORE SUBMITTED · ${Number(existingSubmission.totalScore||0).toLocaleString('en-US')} POINTS · SAVED ON THIS DEVICE`:summary.completed?'Daily puzzle complete. Submit once to appear in the public rankings.':'Complete your Daily puzzle to unlock submission. Free Play scores are practice-only.'}</p><small>BASE ${Number(existingSubmission?.baseScore??summary.baseScore).toLocaleString('en-US')} · STREAK BONUS ${Number(existingSubmission?.streakBonus??summary.bonus).toLocaleString('en-US')} · ${existingSubmission?.streak??summary.streak} DAY STREAK</small></div>
  <form class="board-form" id="board-submit-form"><label for="board-nickname">PUBLIC NICKNAME</label><input id="board-nickname" name="nickname" required minlength="3" maxlength="18" autocomplete="nickname" pattern="[A-Za-z0-9 _-]{3,18}" placeholder="Your gamer nickname" value="${esc(savedNickname())}" ${isTodayComplete&&leaderboardConfigured()&&!existingSubmission?'':'disabled'}/>${canSubmitDaily?'<button class="btn pink" type="submit">SUBMIT DAILY SCORE ↗</button>':existingSubmission?'<button class="btn pink" type="button" disabled>✓ SCORE SUBMITTED</button>':!isTodayComplete?'<button class="btn pink" type="button" data-action="home-daily">▶ PLAY DAILY TO UNLOCK SUBMISSION</button>':'<button class="btn pink" type="button" disabled>SUBMISSION UNAVAILABLE</button>'}<small>Ranked scores require one completed Daily puzzle. Free Play is unranked · one submission per day · no real names. <button class="inline-link" type="button" data-action="profile">Change nickname</button></small><p id="board-submit-feedback" class="board-submit-feedback" role="status" aria-live="polite"></p></form></section>
@@ -917,12 +916,23 @@ function dailyDebrief(){
  const chosen=chosenDaily(store.days,today()),summary=dailySummary(store.days,today()),triviaDone=triviaRewardEarned(),receipt=store.submittedDays?.[today()];
  let triviaReceipt=null;try{triviaReceipt=JSON.parse(localStorage.getItem('tac:trivia-receipt:'+today())||'null');}catch{}
  const finished=Number(summary.completed)+Number(triviaDone),eligible=summary.completed&&!receipt&&!sharedDay&&today()===utcDay()&&leaderboardConfigured(),score=receipt?.totalScore??summary.score;
- return `<main class="tac261-debrief" aria-labelledby="debrief-title"><section class="tac261-debrief-window"><header><b>THE APEX CHALLENGE</b><span>DAILY · ${esc(today())}</span></header><div class="tac261-debrief-body"><span class="kicker">${finished}/2 INTEL REWARDS</span><h1 id="debrief-title">${finished===2?'DAILY COMPLETE.':summary.completed?'PUZZLE COMPLETE.':'YOUR DAILY CHALLENGE.'}</h1><p class="tac261-debrief-intro">One puzzle. One mystery Legend. Trivia keeps its own rankings.</p><div class="tac261-stages"><div class="${summary.completed?'complete':'pending'}"><b>${chosen?DAILY_RULES[chosen.track].difficulty+' · '+DAILY_RULES[chosen.track].label:'DAILY PUZZLE'}</b><small>${summary.completed?'COMPLETED':'READY'}</small></div><div class="${triviaDone?'complete':'pending'}"><b>DAILY TRIVIA</b><small>${triviaDone?'COMPLETED':'OPTIONAL · SEPARATE RUN'}</small></div></div><section class="tac261-score" aria-label="Daily puzzle score"><div><span>DAILY PUZZLE</span><strong>${Number(score).toLocaleString('en-US')} <small>PTS${receipt?'':' · LOCAL PREVIEW'}</small></strong><p>${receipt?'✓ Score submitted':summary.completed?'Ready to submit':'Finish your selected puzzle to submit'}</p></div>${eligible?`<form id="board-submit-form" class="board-form"><label for="board-nickname">PUBLIC NICKNAME</label><input id="board-nickname" name="nickname" required minlength="3" maxlength="18" pattern="[A-Za-z0-9 _-]{3,18}" autocomplete="nickname" placeholder="Your gamer nickname" value="${esc(savedNickname())}"/><button type="submit" class="tac261-submit" ${scoreSubmitting?'disabled':''}>${scoreSubmitting?'SUBMITTING…':'SUBMIT DAILY SCORE ↗'}</button><p id="board-submit-feedback" role="status" aria-live="polite"></p></form>`:''}</section><section class="tac261-score" aria-label="Daily Trivia score"><div><span>DAILY TRIVIA</span><strong>${triviaDone?(triviaReceipt?Number(triviaReceipt.score)+' / 100':'SUBMITTED'):'NOT PLAYED'}</strong><p>${triviaDone?'Automatically submitted':'Five questions · independent ranking'}</p></div></section><button type="button" class="tac261-next" ${!summary.completed?'data-action="home-daily"':!triviaDone?'data-action="trivia" data-trivia-mode="daily"':'data-action="leaderboard"'}>${!summary.completed?'CONTINUE DAILY PUZZLE →':!triviaDone?'PLAY DAILY TRIVIA →':'VIEW RANKINGS →'}</button><div class="tac261-footer"><button type="button" data-action="home">BACK TO HOME</button><button type="button" data-action="leaderboard">VIEW RANKINGS ↗</button></div></div></section></main>`;
+ return `<main class="tac261-debrief" aria-labelledby="debrief-title"><section class="tac261-debrief-window"><header><b>THE APEX CHALLENGE</b><span>DAILY · ${esc(today())}</span></header><div class="tac261-debrief-body"><span class="kicker">${finished}/2 INTEL REWARDS</span><h1 id="debrief-title">${finished===2?'DAILY COMPLETE.':summary.completed?'PUZZLE COMPLETE.':'YOUR DAILY CHALLENGE.'}</h1><p class="tac261-debrief-intro">One puzzle. One mystery Legend. Trivia keeps its own rankings.</p><div class="tac261-stages"><div class="${summary.completed?'complete':'pending'}"><b>${chosen?DAILY_RULES[chosen.track].difficulty+' · '+DAILY_RULES[chosen.track].label:'DAILY PUZZLE'}</b><small>${summary.completed?'COMPLETED':'READY'}</small></div><div class="${triviaDone?'complete':'pending'}"><b>DAILY TRIVIA</b><small>${triviaDone?'COMPLETED':'OPTIONAL · SEPARATE RUN'}</small></div></div><section class="tac261-score" aria-label="Daily puzzle score"><div><span>DAILY PUZZLE</span><strong>${Number(score).toLocaleString('en-US')} <small>PTS${receipt?'':' · LOCAL PREVIEW'}</small></strong><p>${receipt?'✓ Score submitted':summary.completed?'Ready to submit':'Finish your selected puzzle to submit'}</p></div>${eligible?`<form id="board-submit-form" class="board-form"><label for="board-nickname">PUBLIC NICKNAME</label><input id="board-nickname" name="nickname" required minlength="3" maxlength="18" pattern="[A-Za-z0-9 _-]{3,18}" autocomplete="nickname" placeholder="Your gamer nickname" value="${esc(savedNickname())}"/><button type="submit" class="tac261-submit" ${scoreSubmitting?'disabled':''}>${scoreSubmitting?'SUBMITTING…':'SUBMIT DAILY SCORE ↗'}</button><p id="board-submit-feedback" role="status" aria-live="polite"></p></form>`:''}</section>${resultPanel(chosen,summary,receipt)}<section class="tac261-score" aria-label="Daily Trivia score"><div><span>DAILY TRIVIA</span><strong>${triviaDone?(triviaReceipt?Number(triviaReceipt.score)+' / 100':'SUBMITTED'):'NOT PLAYED'}</strong><p>${triviaDone?'Automatically submitted':'Five questions · independent ranking'}</p></div></section><button type="button" class="tac261-next" ${!summary.completed?'data-action="home-daily"':!triviaDone?'data-action="trivia" data-trivia-mode="daily"':'data-action="leaderboard"'}>${!summary.completed?'CONTINUE DAILY PUZZLE →':!triviaDone?'PLAY DAILY TRIVIA →':'VIEW RANKINGS →'}</button><div class="tac261-footer"><button type="button" data-action="home">BACK TO HOME</button><button type="button" data-action="leaderboard">VIEW RANKINGS ↗</button></div></div></section></main>`;
 }
 
+function allCollectedIntel(){
+ const triviaDays=[];try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(key?.startsWith('gtp-trivia-daily-complete:')&&localStorage.getItem(key)==='yes')triviaDays.push(key.slice('gtp-trivia-daily-complete:'.length));}}catch{}
+ return collectedIntel(store,triviaDays);
+}
+function intelArchive(){return '<main class="wrap records tac280-archive-page"><button class="tac280-secondary" data-action="records">← MY STATS</button>'+archivePanel({unlocked:allCollectedIntel(),favorites:store.intelFavorites||[],filter:intelCategory,favoriteOnly:intelFavoriteOnly})+'</main>';}
+async function copyDailyResult(){
+ const receipt=store.submittedDays?.[today()],summary=dailySummary(store.days,today());
+ const text=dailyShare(today(),chosenDaily(store.days,today()),legends,{score:receipt?.totalScore??summary.score,submitted:!!receipt});if(!text)return;
+ try{await navigator.clipboard.writeText(text);showToast('Spoiler-free result copied. Share it with your squad.');}
+ catch{const box=document.createElement('textarea');box.className='tac280-share-fallback';box.readOnly=true;box.setAttribute('aria-label','Spoiler-free Daily result. Select and copy this text.');box.value=text;document.querySelector('.tac280-result')?.appendChild(box);box.focus();box.select();showToast('Select and copy your result below.');}
+}
 function records(){
   const stats=dailyStats(store.days,utcDay());const days=Object.keys(store.days).sort().reverse().slice(0,14);
-  return `<main class="wrap records"><span class="pill">PERSONAL ARCHIVE</span><h1>YOUR <span style="color:#ec4a95">SIGNAL.</span></h1><p class="lead">Your puzzle history, streaks and Intel rewards are saved in this browser. The current Daily has one puzzle with a locked Easy or Hard choice; Daily Trivia is a separate run. Public results appear in Rankings after submission. Clearing browser data removes local history.</p>${statCards()}${forbiddenPanel()}<h2 class="caps" style="font-size:38px">RECENT DAYS</h2><div class="record-rows">${days.map(day=>`<div class="record-row"><span>${day}</span><span>${checkpointCount(store.days,day)}/${store.days[day]?.daily265?1:2} ${checkpointCount(store.days,day)===(store.days[day]?.daily265?1:2)?'✦ CLEARED':''}</span></div>`).join('')||'<p>No Daily results yet. Go start a hunt!</p>'}</div><div class="record-settings"><div><strong>ACCESSIBILITY / VISUAL EFFECTS</strong><small>Reduce background and reward animation intensity on slower devices.</small></div><button class="btn lilac small" data-action="motion">FX ${store.settings.motion?'ON':'OFF'} · CHANGE</button></div><button class="btn pink" data-action="home">BACK TO CHALLENGES ↗</button><button class="btn mint" data-action="leaderboard">♛ GLOBAL LEADERBOARD</button></main>`;
+  return `<main class="wrap records"><span class="pill">PERSONAL ARCHIVE</span><h1>YOUR <span style="color:#ec4a95">SIGNAL.</span></h1><p class="lead">Your puzzle history, streaks and Intel rewards are saved in this browser. The current Daily has one puzzle with a locked Easy or Hard choice; Daily Trivia is a separate run. Public results appear in Rankings after submission. Clearing browser data removes local history.</p>${statCards()}${statsPanel(store.days,today(),stats)}${forbiddenPanel()}<button class="tac280-secondary" data-action="intel-archive">OPEN INTEL ARCHIVE ↗</button><h2 class="caps" style="font-size:38px">RECENT DAYS</h2><div class="record-rows">${days.map(day=>`<div class="record-row"><span>${day}</span><span>${checkpointCount(store.days,day)}/${store.days[day]?.daily265?1:2} ${checkpointCount(store.days,day)===(store.days[day]?.daily265?1:2)?'✦ CLEARED':''}</span></div>`).join('')||'<p>No Daily results yet. Go start a hunt!</p>'}</div><div class="record-settings"><div><strong>ACCESSIBILITY / VISUAL EFFECTS</strong><small>Reduce background and reward animation intensity on slower devices.</small></div><button class="btn lilac small" data-action="motion">FX ${store.settings.motion?'ON':'OFF'} · CHANGE</button></div><button class="btn pink" data-action="home">BACK TO CHALLENGES ↗</button><button class="btn mint" data-action="leaderboard">♛ GLOBAL LEADERBOARD</button></main>`;
 }
 function wheelPool(){
  return wheelChoices(legends).filter(l=>!wheelNoRepeat||!wheelChosen||l.name!==wheelChosen.name);
@@ -1038,7 +1048,7 @@ async function copyWheelPick(){
 }
 function pageEnvironment(){return '';}
 function sceneBackdrop273(){
- const utility={leaderboard:'leaderboard-v273',records:'records-v273',faq:'faq-v273',howto:'howto-v273'};
+ const utility={leaderboard:'leaderboard-v273','intel-archive':'records-v273',records:'records-v273',faq:'faq-v273',howto:'howto-v273'};
  const mode={classic:'loba-v271',pixel:'pixel',quote:'quote',ability:'ability',emoji:'emoji'};
  const image=utility[screen]||(screen==='game'?mode[active]:screen==='trivia'?'trivia':screen==='daily-choice'||screen==='debrief'?'hangar':'loba-v271');
  return '<div class="tac273-scene" aria-hidden="true"><img src="./assets/industrial-v267/'+image+'.webp" alt="" loading="eager" decoding="async" draggable="false"/></div>';
@@ -1060,7 +1070,7 @@ function render({scroll=true}={}) {
   document.body.classList.toggle('lightshift-playing',screen==='game');
   app.className=`app ${store.settings.motion?'':'no-motion'}`;
   app.dataset.screen=screen;app.dataset.session=session;app.dataset.difficulty=session==='daily'?(chosenDaily(store.days,today())?.track||''):'';app.dataset.mode=screen==='game'?active:'';
-  app.innerHTML=nav()+sceneBackdrop273()+pageEnvironment()+(screen==='daily-choice'?dailyChoice():screen==='home'?home():screen==='game'?game():screen==='trivia'?trivia():screen==='records'?records():screen==='howto'?howTo():screen==='faq'?faq():screen==='debrief'?dailyDebrief():leaderboard());
+  app.innerHTML=nav()+sceneBackdrop273()+pageEnvironment()+(screen==='daily-choice'?dailyChoice():screen==='home'?home():screen==='game'?game():screen==='trivia'?trivia():screen==='intel-archive'?intelArchive():screen==='records'?records():screen==='howto'?howTo():screen==='faq'?faq():screen==='debrief'?dailyDebrief():leaderboard());
   if(identityDraft!==null){openIdentityPrompt(true);const input=document.getElementById('identity-name');if(input)input.value=identityDraft;}
   else if(settingsWasOpen)settingsDialog();
   loadPortraitImages();
@@ -1070,6 +1080,7 @@ function render({scroll=true}={}) {
   if(screen==='game'&&!getRound()?.finished)updateSearchResults();
   if(pickerOpen)renderPicker();
   if(inputFocus)restoreInputFocus(document,inputFocus);
+  if(tutorialOpen){app.insertAdjacentHTML('beforeend',tutorialPanel());document.querySelector('#scanner-tutorial .tac280-primary')?.focus();}
   // Nicknames are requested only for ranked submissions, never for browsing or practice.
 }
 
@@ -1177,7 +1188,7 @@ function useCurrentDay(){
 function beginDaily(){
  useCurrentDay();
  session='daily';store.settings.session='daily';migrateSingleDaily(store.days,today(),legends);sync();pickerOpen=false;
- const chosen=chosenDaily(store.days,today());if(chosen){dailyTrack=chosen.track;openMode(chosen.gameMode,'daily');return;}
+ const chosen=chosenDaily(store.days,today());if(chosen){dailyTrack=chosen.track;if(chosen.round.finished){screen='debrief';render();return;}openMode(chosen.gameMode,'daily');return;}
  screen='daily-choice';render();sound('nav');
 }
 function dailyChoice(){
@@ -1204,6 +1215,12 @@ app.addEventListener('click',event=>{
   if(checkDailyRollover())return;
   const button=event.target.closest('[data-action]');if(!button||button.disabled)return;
   const action=button.dataset.action;
+  if(action==='share-daily'){void copyDailyResult();return;}
+  if(action==='intel-archive'){screen='intel-archive';render();return;}
+  if(action==='intel-favorites'){intelFavoriteOnly=!intelFavoriteOnly;render({scroll:false});return;}
+  if(action==='intel-favorite'){const title=button.dataset.title;if(!allCollectedIntel().has(title))return;const favorites=new Set(store.intelFavorites||[]);favorites.has(title)?favorites.delete(title):favorites.add(title);store.intelFavorites=[...favorites];sync();render({scroll:false});return;}
+  if(action==='tutorial-open'){tutorialOpen=true;render({scroll:false});return;}
+  if(action==='tutorial-close'){tutorialOpen=false;store.settings.scannerGuideSeen=true;sync();document.getElementById('scanner-tutorial')?.remove();document.querySelector('[data-action="tutorial-open"]')?.focus();return;}
   if(action==='intel-open'){
   const checkpoint=Number(button.dataset.checkpoint)||1;
   if(checkpoint===2?!triviaRewardEarned():checkpoint>checkpointCount(store.days,today())){showToast(checkpoint===2?"Complete Daily Trivia to unlock this reward.":`Complete Daily Challenge ${checkpoint} to unlock the reward.`);return;}
@@ -1233,7 +1250,7 @@ app.addEventListener('click',event=>{
   else if(action==='leaderboard'){screen='leaderboard';pickerOpen=false;render();void refreshBoards();void loadTriviaBoards();sound('nav');}
   else if(action==='scroll-extras'){document.getElementById('home-extras')?.scrollIntoView({behavior:store.settings.motion?'smooth':'instant'});}
   else if(action==='board-tab'){boardTab=button.dataset.board;render({scroll:false});if(!boardData)void refreshBoards();}
-  else if(action==='choose-daily'){if(!DAILY_RULES[button.dataset.track])return;const chosen=chooseDaily(store.days,today(),button.dataset.track,legends);dailyTrack=chosen.track;sync();openMode(chosen.gameMode,'daily');}
+  else if(action==='choose-daily'){if(!DAILY_RULES[button.dataset.track])return;const chosen=chooseDaily(store.days,today(),button.dataset.track,legends);dailyTrack=chosen.track;sync();openMode(chosen.gameMode,'daily');if(!store.settings.scannerGuideSeen){tutorialOpen=true;render({scroll:false});}}
   else if(action==='open'){if(!button.dataset.session&&session==='daily')beginDaily();else openMode(button.dataset.mode,button.dataset.session||'unlimited');}
   else if(action==='home-full'||action==='home-signal'){beginDaily();}
   else if(action==='home-rush'){
@@ -1316,10 +1333,11 @@ app.addEventListener('input',event=>{
   if(event.target.id==='picker-sort'){pickerSort=event.target.value;renderPickerResults();}
 });
 app.addEventListener('change',event=>{
+ if(event.target.id==='intel-category'){intelCategory=event.target.value;render({scroll:false});document.getElementById('intel-category')?.focus();return;}
   if(event.target.id==='wheel-repeat'&&!wheelSpinning){wheelNoRepeat=event.target.checked;refreshWheelOptions();}
 if(event.target.id==='picker-sort'){pickerSort=event.target.value;renderPickerResults();}});
 document.addEventListener('keydown',event=>{
-  const modal=document.getElementById('identity-backdrop')||document.getElementById('gtp237-settings')||document.getElementById('intel-dialog')||document.getElementById('wheel-backdrop')||document.getElementById('picker-backdrop');
+  const modal=document.getElementById('scanner-tutorial')||document.getElementById('identity-backdrop')||document.getElementById('gtp237-settings')||document.getElementById('intel-dialog')||document.getElementById('wheel-backdrop')||document.getElementById('picker-backdrop');
   if(modal&&event.key==='Tab'){
    const nodes=[...modal.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary')].filter(node=>node.getClientRects().length);
    const index=nodes.indexOf(document.activeElement);
@@ -1327,6 +1345,7 @@ document.addEventListener('keydown',event=>{
    return;
   }
   if(event.key==='Escape'){
+   if(tutorialOpen){tutorialOpen=false;store.settings.scannerGuideSeen=true;sync();document.getElementById('scanner-tutorial')?.remove();return;}
    if(identityPromptOpen){closeIdentityPrompt();return;}
    if(document.getElementById('gtp237-settings')){document.getElementById('gtp237-settings').remove();return;}
    if(intelModalOpen){closeIntelDialog();return;}
@@ -1357,16 +1376,16 @@ function checkDailyRollover(){
  const currentUTC=utcDay();if(currentUTC===lastSpotlightUTC)return false;
  lastSpotlightUTC=currentUTC;
  store=loadStore();
- if(boardData)boardData={...boardData,daily:[]};
+ if(boardData)boardData={...boardData,daily:[],weekly:[]};
  boardCacheDay=currentUTC;
  pickerOpen=false;quickSearch='';if(intelModalOpen)closeIntelDialog();intelFirstRevealPending=false;
  if(wheelOpen)closeWheel();
  if(triviaMode==='daily')resetTriviaView();
- if(triviaBoard)triviaBoard={...triviaBoard,daily:[]};
+ if(triviaBoard)triviaBoard={...triviaBoard,daily:[],weekly:[]};
  useCurrentDay();
  if(screen==='game'&&session==='daily'){beginDaily();showToast('A new UTC day has started. Choose your Daily difficulty.');return true;}
  if(screen==='daily-choice'||screen==='debrief'){screen='home';}
- if(['home','records','leaderboard','trivia'].includes(screen)&&!wheelOpen){
+ if(['home','records','intel-archive','leaderboard','trivia'].includes(screen)&&!wheelOpen){
   render({scroll:false});
   if(screen==='trivia'&&triviaMode==='daily')showToast('New Daily Trivia is ready. Yesterday’s result stays in your history.');
   if(screen==='leaderboard'){void refreshBoards();void loadTriviaBoards();}
@@ -1378,6 +1397,7 @@ window.addEventListener('pageshow',checkDailyRollover);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDailyRollover();});
 setInterval(()=>{
   checkDailyRollover();
+  document.querySelectorAll('[data-reset-countdown]').forEach(node=>node.textContent=resetCountdown());
   if(screen!=='game')return;
   const round=getRound();if(!round)return;
   const expired=expireRound(round,Date.now());
