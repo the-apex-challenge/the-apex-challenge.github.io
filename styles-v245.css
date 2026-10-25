@@ -1796,3 +1796,22 @@ html,body{background:#0d1012!important;color:var(--tac267-ink)}
 #app#app#app .records .record-row{background:#15232b!important;border-color:#53605e!important}
 #app#app#app .records .vault-track>span{background:#bda471!important}
 @media(max-width:700px){#app#app#app[data-screen="home"] .gtp246-orbit-mode{display:flex!important;flex-direction:column!important;align-items:flex-start!important;min-height:170px!important}#app#app#app[data-screen="home"] .gtp242-mode-plate strong{white-space:normal!important}#app#app#app[data-screen="home"] .gtp242-mode-plate small{font-size:10px!important}}
+
+/* V2.81: one Pixel frame, including the revealed loss state and expanded image. */
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel .pixel-art{aspect-ratio:25/18!important;overflow:hidden!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel .pixel-canvas{aspect-ratio:25/18!important;object-fit:contain!important;object-position:center center!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-main-clue:has(.tac-pixel-expanded){height:auto!important;max-height:none!important;overflow:visible!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel.tac-pixel-expanded .pixel-art{height:auto!important;aspect-ratio:25/18!important;max-height:none!important}
+#app#app#app .gtp281-practice-note{margin:12px 0 0;color:#bdc9c4;font-size:11px;line-height:1.6;grid-column:1/-1}
+
+/* Isolate Pixel from legacy fixed-height and decorative-circle clue rules. */
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-game .gtp230-arena>.gtp230-main-clue{height:auto!important;max-height:none!important;min-height:0!important;overflow:visible!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-main-clue .visual-pixel.nova-pixel-scene{width:100%!important;max-width:540px!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;display:flex!important;flex-direction:column!important;gap:10px!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel::before,#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel::after{display:none!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-main-clue .visual-pixel .pixel-art{display:block!important;position:relative!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;aspect-ratio:25/18!important;flex:none!important;background:none!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-main-clue .visual-pixel .pixel-canvas{display:block!important;position:relative!important;width:100%!important;height:auto!important;max-width:none!important;max-height:none!important;margin:0!important;aspect-ratio:25/18!important;transform:none!important;object-fit:contain!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel.pixel-revealed :is(.pixel-art,.pixel-canvas.loaded){filter:none!important;opacity:1!important;image-rendering:auto!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel .pixel-source{display:none!important}
+#app#app#app[data-screen="game"][data-mode="pixel"] .visual-pixel.tac-pixel-expanded{max-width:none!important}
+
+#app#app#app[data-screen="game"][data-mode="pixel"] .gtp230-game .gtp230-arena:has(.tac-pixel-expanded){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;grid-template-areas:"clue" "controls" "intel"!important}
