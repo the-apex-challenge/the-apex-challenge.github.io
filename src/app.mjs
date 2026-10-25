@@ -1,5 +1,5 @@
 const MODE_SYMBOLS267={"classic":"<path d=\"M18 3 33 33H24L18 18 12 33H3Z\"/><path d=\"m13 27 5-9 5 9\"/>","pixel":"<path d=\"M5 5h9v9H5zm17 0h9v9h-9zM5 22h9v9H5zm17 0h9v9h-9z\"/><path d=\"M14 14h8v8h-8\"/>","quote":"<path d=\"M6 20h8V9H6v11l-3 7h7zm17 0h8V9h-8v11l-3 7h7\"/>","ability":"<path d=\"m18 3 4 11 11 4-11 4-4 11-4-11L3 18l11-4Z\"/><path d=\"M18 9v18M9 18h18\"/>","emoji":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M11 22q7 8 14 0M12 12h1m10 0h1\"/>","trivia":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M4 18h28M18 4q-13 14 0 28M18 4q13 14 0 28M7 10h22M7 26h22\"/>"};
-import {chosenDaily,migrateSingleDaily,chooseDaily,DAILY_RULES} from './daily265.mjs?v=2.65.0';
+import {chosenDaily,migrateSingleDaily,chooseDaily,DAILY_RULES} from './daily265.mjs?v=2.78.0';
 import {TIPS,unlockedIntel,tipFor} from './tips.mjs?v=2.43.0';
 import {legends} from './data.mjs?v=2.43.0';
 import {artCatalog,portraitSourcesFor,reliableIconFallbacks} from './art.mjs?v=2.43.0';
@@ -9,7 +9,7 @@ import {dailySpotlight,wheelChoices,wheelPick,destinationRotation} from './spotl
 import {playSound} from './audio.mjs?v=2.43.0&release=2.44.0&ui=2.62.0';
 import {paintPixelScene} from './pixel_scene.mjs?v=2.43.0&ui=2.63.0';
 import {getBoards, submitDaily, triviaRequest, getTriviaBoards, leaderboardConfigured} from './leaderboard.mjs?v=2.43.0&release=2.54.0';
-import {dailySummary, buildSubmission} from './scoring.mjs?v=2.43.0&ui=2.74.0';
+import {dailySummary, buildSubmission} from './scoring.mjs?v=2.43.0&ui=2.78.0';
 import {DAILY_TRACKS,dailySchedule,dailyAnswers,currentDailyRounds,checkpointCount,dailyStats,rewardFor,intelFor,nextDailyStep} from './daily218.mjs?v=2.43.0&release=2.60.0&ui=2.65.0';
 import {loadStore,saveStore} from './store.mjs?v=2.43.0';
 import {FIELDS,LABELS,MODES,MODE_NAMES,CLASS_NAMES,MAX_GUESSES,MAX_HINTS,maxGuesses,visibleEmojiCount,utcDay,puzzleAnswers,newRound,tryGuess,expireRound,
@@ -108,7 +108,7 @@ function setRound(round){
 }
 function ensureRound(mode=active,playSession=session){
  if(playSession==='daily'){
-  migrateSingleDaily(store.days,today());const chosen=chosenDaily(store.days,today());if(!chosen)throw Error('Choose Daily difficulty first');
+  migrateSingleDaily(store.days,today(),legends);const chosen=chosenDaily(store.days,today());if(!chosen)throw Error('Choose Daily difficulty first');
   dailyTrack=chosen.track;active=chosen.gameMode;return chosen.round;
  }
  let round=store.practice[mode];
@@ -301,11 +301,9 @@ function dailyExtras(){
   </section>`;
 }
 function homeIntelPanel(){
- const rounds=store.days[today()]||{};
- const complete=dailyModes().filter(mode=>rounds[mode]?.finished).length;
- const total=dailyModes().length;
- const unlocked=unlockedIntel(rounds,dailyModes());
- const claimed=Boolean(store.intelOpenedDays?.[today()]);
+ const complete=Number(intelState(1).unlocked);
+ const total=1;
+ const {unlocked,read:claimed}=intelState(1);
  return `<article class="gtp214-intel-center gtp215-intel-feature" aria-label="Forbidden Intel daily reward">
    <div class="gtp215-intel-art" aria-hidden="true"><div class="vault-chest"><div class="vault-lid"><span>◆</span></div><div class="vault-box"><span>✦</span></div></div></div>
    <div class="gtp215-intel-details">
@@ -313,7 +311,7 @@ function homeIntelPanel(){
      <h2>FORBIDDEN <em>INTEL.</em></h2>
      <div class="gtp214-intel-track" role="progressbar" aria-valuenow="${complete}" aria-valuemin="0" aria-valuemax="${total}" aria-label="Daily challenges completed"><span style="width:${complete/total*100}%"></span></div>
      <p>${complete}/${total} MISSIONS COMPLETE</p>
-     <button type="button" data-action="intel-open" ${unlocked?'':'disabled'}>${unlocked?(claimed?'✦ VIEW TODAY’S INTEL':'✦ REVEAL YOUR INTEL'):'◆ COMPLETE ALL FIVE TO UNLOCK'}</button>
+     <button type="button" data-action="intel-open" data-checkpoint="1" ${unlocked?'':'disabled'}>${unlocked?(claimed?'✦ VIEW TODAY’S INTEL':'✦ REVEAL YOUR INTEL'):'◆ COMPLETE YOUR DAILY PUZZLE TO UNLOCK'}</button>
    </div>
  </article>`;
 }
@@ -377,7 +375,7 @@ function home(){
   {id:'trivia',title:'TRIVIA',host:'crypto',description:'Crack five Apex intel questions.',action:'trivia',accent:'blue'}
  ];
  const heroCard=cfg=>{
- const selected=chosenDaily(store.days,today());const dailyMode=selected?.gameMode||scheduled.full;const track=cfg.mode===dailyMode?(selected?.track||'full'):null;
+ const selected=chosenDaily(store.days,today());const dailyMode=selected?.gameMode||'classic';const track=cfg.mode===dailyMode?(selected?.track||'full'):null;
  const locked=session==='daily'&&cfg.id!=='trivia'&&!track;
  const completed=session==='daily'&&(cfg.id==='trivia'?triviaRewardEarned():Boolean(track&&rounds[track]?.finished));
  const action=session==='daily'&&cfg.id!=='trivia'?(track?'home-daily':'open'):cfg.action;
@@ -1051,7 +1049,7 @@ function render({scroll=true}={}) {
   document.body.classList.toggle('lightshift-playing',screen==='game');
   app.className=`app ${store.settings.motion?'':'no-motion'}`;
   app.dataset.screen=screen;app.dataset.session=session;app.dataset.difficulty=session==='daily'?(chosenDaily(store.days,today())?.track||''):'';app.dataset.mode=screen==='game'?active:'';
-  if(migrateSingleDaily(store.days,today()))sync();
+  if(migrateSingleDaily(store.days,today(),legends))sync();
   app.innerHTML=nav()+sceneBackdrop273()+pageEnvironment()+(screen==='daily-choice'?dailyChoice():screen==='home'?home():screen==='game'?game():screen==='trivia'?trivia():screen==='records'?records():screen==='howto'?howTo():screen==='faq'?faq():screen==='debrief'?dailyDebrief():leaderboard());
   if(identityDraft!==null){openIdentityPrompt(true);const input=document.getElementById('identity-name');if(input)input.value=identityDraft;}
   else if(settingsWasOpen)settingsDialog();
@@ -1067,7 +1065,7 @@ function render({scroll=true}={}) {
 function openMode(mode,playSession=session){
   if(!MODES.includes(mode))return;
   if(playSession==='daily'){
-    migrateSingleDaily(store.days,today());const chosen=chosenDaily(store.days,today());
+    migrateSingleDaily(store.days,today(),legends);const chosen=chosenDaily(store.days,today());
     if(!chosen){beginDaily();return;}dailyTrack=chosen.track;mode=chosen.gameMode;
   }
   active=mode;session=playSession;store.settings.session=session;sync();screen='game';pickerOpen=false;quickSearch='';ensureRound();render();sound('nav');
@@ -1167,7 +1165,7 @@ function useCurrentDay(){
 }
 function beginDaily(){
  useCurrentDay();
- session='daily';store.settings.session='daily';migrateSingleDaily(store.days,today());sync();pickerOpen=false;
+ session='daily';store.settings.session='daily';migrateSingleDaily(store.days,today(),legends);sync();pickerOpen=false;
  const chosen=chosenDaily(store.days,today());if(chosen){dailyTrack=chosen.track;openMode(chosen.gameMode,'daily');return;}
  screen='daily-choice';render();sound('nav');
 }
