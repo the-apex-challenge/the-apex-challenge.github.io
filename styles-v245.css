@@ -1705,3 +1705,94 @@ html,body{background:#0d1012!important;color:var(--tac267-ink)}
 
 /* V2.79: comfortable touch targets without changing the desktop header. */
 @media(max-width:700px){#app#app .gtp2-top-inner{min-height:68px!important}#app#app .top-actions .switch{min-height:44px!important}#app#app .gtp213-mobile-menu>summary{min-width:44px!important;min-height:44px!important;display:grid!important;place-items:center!important}}
+
+/* V2.80 — unified field manual, Daily hub and player progression. */
+#app#app{--tac280-gold:#e9bf86;--tac280-panel:#111b22;--tac280-line:#786449;--tac280-muted:#b9b7b0}
+#app#app .tac280-hub{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:28px;background:linear-gradient(120deg,#17242bf5,#11191ff5);border:1px solid var(--tac280-line);border-left:4px solid var(--tac280-gold);border-radius:8px;padding:26px;margin:12px 0 30px;box-shadow:0 14px 40px #0004}
+#app#app .tac280-hub h2{font-size:clamp(25px,3vw,39px);margin:10px 0;line-height:1.05;color:#fff0d9}
+#app#app .tac280-hub p{font-size:14px;line-height:1.6;color:#d1d0c8;max-width:55ch;margin:10px 0 18px}
+#app#app .tac280-hub-actions{display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0}
+#app#app .tac280-hub-actions>small{text-align:center;color:var(--tac280-muted);font-size:10px;letter-spacing:.04em}
+#app#app [data-reset-countdown]{font-variant-numeric:tabular-nums;color:#f5d5a4;margin-left:4px}
+#app#app .tac280-status{display:flex;flex-wrap:wrap;gap:8px}
+#app#app .tac280-status span{border:1px solid #52616b;padding:7px 9px;font-size:10px;font-weight:800;color:#c6cbd0;border-radius:4px}
+#app#app .tac280-status .done{border-color:#74b998;color:#a5e6c2;background:#1b392c}
+#app#app :is(.tac280-primary,.tac280-secondary,.tac280-archive-link){font:inherit;font-size:12px;font-weight:800;letter-spacing:.04em;min-height:44px;padding:12px 16px;border-radius:5px;cursor:pointer;text-align:center;text-decoration:none;line-height:1.35}
+#app#app .tac280-primary{background:#943e4b;border:1px solid #c2707b;color:#fff2e0}
+#app#app .tac280-secondary{background:#18242c;border:1px solid #776b59;color:#f0d4af}
+#app#app .tac280-archive-link{border:0;background:transparent;color:#e9bf86;padding:4px;font-size:10px;min-height:32px}
+#app#app :is(.tac280-primary,.tac280-secondary):hover{filter:brightness(1.15)}
+#app#app .tac280-free-heading{margin:0 0 12px}#app#app .tac280-free-heading h2{font-size:27px;margin:6px 0}#app#app .tac280-free-heading p{font-size:13px;color:#c4c0b6;margin:6px 0}
+#app#app[data-screen="home"] .gtp246-home-core{display:none!important}
+#app#app[data-screen="home"] .gtp246-home-arena{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;padding-top:0!important}
+#app#app[data-screen="home"] .gtp239-side{display:contents!important}
+#app#app[data-screen="home"] .gtp246-orbit-mode{min-height:125px!important;opacity:1!important;padding:16px 12px!important;gap:10px!important}
+#app#app[data-screen="home"] .gtp242-mode-plate strong{font-size:23px!important}
+#app#app[data-screen="home"] .gtp242-mode-plate small{display:block!important;font-size:11px!important;line-height:1.4}
+#app#app[data-screen="home"] .gtp242-mode-medallion{flex:0 0 34px!important;width:34px!important;height:40px!important}
+#app#app[data-screen="home"] .tac267-mode-symbol{width:30px;height:30px}
+#app#app .tac280-stats,#app#app .tac280-archive{background:#111b22ee;border:1px solid var(--tac280-line);border-radius:8px;padding:28px;margin:24px 0}
+#app#app :is(.tac280-stats,.tac280-archive) h2{color:#fff0d9;margin:8px 0;font-size:clamp(28px,4vw,42px);line-height:1.1}
+#app#app :is(.tac280-stats,.tac280-archive)>header p{color:#c5c7c3;font-size:14px;line-height:1.6;max-width:65ch}
+#app#app .tac280-stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0}
+#app#app .tac280-stat-grid article{background:#19272f;border:1px solid #485560;border-radius:5px;padding:18px}
+#app#app .tac280-stat-grid strong{font-size:36px;color:#f0c990;display:block}#app#app .tac280-stat-grid span{font-size:10px;font-weight:800;color:#c9c9c1}
+#app#app .tac280-charts{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:18px 0}
+#app#app .tac280-charts h3{font-size:13px;letter-spacing:.1em;margin:0 0 18px;color:#f2dfc2}
+#app#app .tac280-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+#app#app .tac280-calendar span{display:grid;place-items:center;aspect-ratio:1;min-height:30px;background:#1d2932;border:1px solid #42515d;color:#aaa;font-size:11px;border-radius:4px}
+#app#app .tac280-calendar .won{background:#275d46;border-color:#7bb891;color:#e8ffee}#app#app .tac280-calendar .lost{background:#68333e;border-color:#bb6d77;color:#fff0ed}#app#app .tac280-calendar .legacy{background:#5e4e32;border-color:#bd9b60;color:#ffe4b1}
+#app#app .tac280-distribution>div{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12px}
+#app#app .tac280-distribution>div>span{width:14px}#app#app .tac280-distribution>div>div{position:relative;flex:1;background:#1d2b34;border-radius:3px;min-height:24px;overflow:hidden}
+#app#app .tac280-distribution i{position:absolute;inset:0 auto 0 0;background:#47785f}#app#app .tac280-distribution b{position:relative;padding:4px 8px;display:block}
+#app#app .tac280-difficulty-stats{display:flex;flex-wrap:wrap;gap:12px;padding:18px 0;font-size:12px;border-top:1px solid #45525c}
+#app#app .easy{color:#a4ddba}#app#app .hard{color:#f1a0a9}#app#app .tac280-muted{color:var(--tac280-muted);font-size:11px;line-height:1.6}
+#app#app .tac280-archive-filters{display:flex;align-items:end;gap:16px;margin:24px 0;flex-wrap:wrap}
+#app#app .tac280-archive-filters label{font-size:10px;font-weight:800;display:flex;flex-direction:column;gap:8px;max-width:100%}
+#app#app .tac280-archive-filters select{background:#172630;border:1px solid #7c6d58;color:#fff0d9;padding:12px;min-height:44px;font:inherit;border-radius:4px;max-width:100%}
+#app#app .tac280-intel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#app#app .tac280-intel-card{background:#18252ee8;border:1px solid #5e665f;padding:22px;border-radius:6px;min-width:0}
+#app#app .tac280-intel-card h3{font-size:20px;line-height:1.25;color:#f5d7ac;margin:10px 0}
+#app#app .tac280-intel-card p{font-size:13px;line-height:1.7;color:#d4d5cd;overflow-wrap:anywhere}
+#app#app .tac280-intel-card details b{display:block;color:#f3d6ab;font-size:11px;letter-spacing:.06em;margin-top:16px}
+#app#app .tac280-intel-card summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:11px;color:#f3d6ab;font-weight:800}
+#app#app .tac280-intel-card details a{display:block;color:#a9d9df;font-size:12px;margin:14px 0;overflow-wrap:anywhere}
+#app#app .tac280-intel-card small{color:#adb5b6;font-size:10px}
+#app#app .tac280-intel-card>button{background:transparent;border:1px solid #77715e;color:#f1d2a6;border-radius:4px;min-height:44px;padding:10px;margin-top:14px;font-size:10px;font-weight:800;cursor:pointer}
+#app#app .tac280-intel-card.locked{border-style:dashed;background:#111c23;color:#a5afaf;min-height:160px}#app#app .tac280-intel-card.locked h3{color:#a5afaf;font-size:16px}#app#app .tac280-intel-card.locked p{color:#adb4b4}
+#app#app .tac280-result{padding:24px;border:1px solid #8d7654;border-radius:7px;background:#17242b;margin:18px 0;display:flex;flex-direction:column;gap:12px}
+#app#app .tac280-result-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+#app#app .tac280-result-metrics span{font-size:10px;color:#bfc6c5;display:flex;flex-direction:column;gap:7px}
+#app#app .tac280-result-metrics b{font-size:20px;color:#f0d1a5;overflow-wrap:anywhere}#app#app .tac280-result p,#app#app .tac280-result small{font-size:12px;color:#c5c6c0;line-height:1.6}
+#app#app .tac280-share-fallback{width:100%;min-height:200px;background:#111c22;color:#fff;padding:12px;border:1px solid #89714d;resize:vertical;font-size:13px}
+#app#app .tac280-guide-link{background:#17232ce8;border:1px solid #68716d;color:#f0d0a6;font:inherit;font-size:11px;font-weight:800;border-radius:4px;min-height:36px;padding:8px 12px;margin:12px 0;cursor:pointer}
+#app#app .tac280-tutorial-backdrop{position:fixed;inset:0;z-index:10000;background:#050a0ee8;display:grid;place-items:center;padding:18px;overflow:auto;backdrop-filter:blur(6px)}
+#app#app .tac280-tutorial{position:relative;background:#14222a;border:1px solid #a98b5c;color:#eee8dd;border-radius:10px;padding:34px;width:min(600px,100%);max-height:calc(100dvh - 36px);overflow:auto;box-shadow:0 25px 90px #0009}
+#app#app .tac280-tutorial h2{font-size:38px;margin:14px 0;color:#ffe4bc}#app#app .tac280-tutorial ol{padding-left:22px}#app#app .tac280-tutorial li{padding:9px 0;font-size:14px;line-height:1.7}#app#app .tac280-tutorial li b{display:block;margin-bottom:4px}
+#app#app .tac280-tutorial>.kicker{display:block;padding-right:20px;font-size:10px}#app#app .tac280-tutorial p{font-size:13px;color:#c6d0cb}
+#app#app .tac280-close{position:absolute;top:12px;right:12px;width:38px;height:38px;border:1px solid #9b8664;background:#1a2932;color:#fff;border-radius:4px;cursor:pointer}
+#app#app .tac280-example{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 24px}#app#app .tac280-example span{border:1px solid #659c7c;background:#234635;color:#c5f0d1;padding:12px;font-size:11px;font-weight:800}
+#app#app .tac280-tutorial>.tac280-primary{width:100%}#app#app .tac280-tutorial>.tac280-secondary{display:block;width:100%;margin-top:10px}
+#app#app .tac-ranking-header,#app#app .board-table,#app#app .tac-ranking-footer{background:#14232bea!important;color:#e8dfd0!important;border-color:#6a6457!important}
+#app#app .board-switch button,#app#app .trivia-tabs button{border-color:#8b7353!important;border-radius:5px!important;background:#14232b!important;color:#f2debf!important;box-shadow:none!important}
+#app#app .board-switch button.active,#app#app .trivia-tabs button.active{background:#823f4a!important;color:#fff1df!important}
+#app#app .gtp27-leaderboard h1 em,#app#app .records h1 span{color:#ecc28e!important}
+#app#app .gtp27-leaderboard>.lead{font-size:14px;line-height:1.7;max-width:75ch}
+#app#app .tac280-empty-board{min-height:150px!important;background:#142027!important;padding:24px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#app#app .tac280-empty-board b{color:#efc58d;font-size:17px}#app#app .tac280-empty-board p{font-size:13px;margin:0;color:#c0c6c4}
+@media(max-width:900px){#app#app[data-screen="home"] .gtp246-home-arena{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:700px){#app#app .tac280-hub{grid-template-columns:1fr;gap:18px;padding:20px;margin-top:8px}#app#app .tac280-hub-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}#app#app .tac280-hub-actions>small,#app#app .tac280-archive-link{grid-column:1/-1}#app#app .tac280-hub-actions>button{font-size:10px;padding:10px 8px}#app#app .tac280-charts,#app#app .tac280-intel-grid{grid-template-columns:1fr}#app#app .tac280-stats,#app#app .tac280-archive{padding:18px}#app#app .tac280-stat-grid{gap:7px}#app#app .tac280-stat-grid article{padding:12px 8px}#app#app .tac280-stat-grid strong{font-size:27px}#app#app .tac280-stat-grid span{font-size:8px}#app#app .tac280-result{padding:16px}#app#app .tac280-result-metrics{grid-template-columns:1fr 1fr}#app#app .tac280-tutorial{padding:24px 18px}#app#app .tac280-tutorial h2{font-size:29px}#app#app[data-screen="home"] .gtp242-mode-plate strong{font-size:19px!important}#app#app[data-screen="home"] .gtp242-mode-plate small{font-size:10px!important}#app#app[data-screen="intel-archive"]>main{width:calc(100% - 24px)!important;margin:0 12px!important;padding-top:160px!important}}
+
+#app#app .board-row.tac280-your-score{background:#304d3c!important;border-left:3px solid #b2dfb8!important}#app#app .board-row.tac280-your-score strong small{font-size:9px;color:#c5f3cc;border:1px solid #8ab592;padding:3px 6px;margin-left:7px}
+
+/* Final visual QA: override legacy high-specificity skins. */
+#app#app#app[data-screen="home"] .gtp246-home-arena>.gtp246-home-core{display:none!important}
+#app#app#app[data-screen="home"] .gtp242-mode-plate{min-width:0!important;max-width:100%!important;flex:1!important}
+#app#app#app[data-screen="home"] .gtp242-mode-plate small{white-space:normal!important;overflow-wrap:anywhere!important;max-width:100%!important;overflow:visible!important;font-size:11px!important}
+#app#app#app :is(.tac280-hub,.tac280-stats,.tac280-archive,.tac280-free-heading,.tac280-tutorial) .kicker{color:#e9bf86!important}
+#app#app#app .records :is(.stat,.record-settings,.vault-showcase){background:#15232bee!important;border:1px solid #817052!important;border-radius:7px!important;box-shadow:none!important;color:#e8dfcf!important}
+#app#app#app .records .stat strong{color:#f5d3a1!important}#app#app#app .records .stat label{color:#d7c4a7!important}
+#app#app#app .records .pill{background:#24343d!important;color:#ead1ad!important;border:1px solid #89704f!important}
+#app#app#app .records .record-row{background:#15232b!important;border-color:#53605e!important}
+#app#app#app .records .vault-track>span{background:#bda471!important}
+@media(max-width:700px){#app#app#app[data-screen="home"] .gtp246-orbit-mode{display:flex!important;flex-direction:column!important;align-items:flex-start!important;min-height:170px!important}#app#app#app[data-screen="home"] .gtp242-mode-plate strong{white-space:normal!important}#app#app#app[data-screen="home"] .gtp242-mode-plate small{font-size:10px!important}}
