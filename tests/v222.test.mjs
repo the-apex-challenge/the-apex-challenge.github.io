@@ -18,7 +18,7 @@ test('six cards orbit around a single central reward hub',()=>{
  assert.ok(home.includes('gtp222-arena')&&home.includes('gtp222-core'));
  for(const mode of ['classic','pixel','quote','ability','emoji','trivia'])assert.ok(home.includes(`'${mode}'`));
  assert.ok(home.includes('data-action="wheel"')&&home.includes('tac258-wheel-face'));
- assert.ok(home.includes('data-action="intel-open"')&&home.includes('playContext(session')&&!home.includes('gtp222-primary-actions'));
+ assert.ok(home.includes('data-action="intel-open"')&&home.includes('todayHub(')&&!home.includes('gtp222-primary-actions'));
 });
 test('Full Scan retains correct matches across later different guesses',()=>{
  const target=legends.find(l=>l.name==='Mirage');

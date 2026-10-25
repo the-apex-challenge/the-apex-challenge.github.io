@@ -27,7 +27,7 @@ test('only two completed daily rounds can submit a v218 payload',()=>{
 test('home is full bleed with real buttons and not transparent overlay hit-boxes',()=>{
  const home=app.slice(app.indexOf('function home(){'),app.indexOf('function homeLegacy(){'));
  assert.ok(home.includes('gtp219-home'));assert.ok(home.includes('gtp219-backdrop'));assert.ok(home.includes('gtp222-orbit-card'));
- assert.ok(home.includes("'home-daily'"));assert.ok(home.includes('playContext(session')&&app.includes('data-action="home-session"'));assert.ok(home.includes('data-action="wheel"'));
+ assert.ok(home.includes('todayHub('));assert.ok(home.includes('todayHub(')&&app.includes('data-action="home-session"'));assert.ok(home.includes('data-action="wheel"'));
  assert.ok(css.includes('.gtp222-layout{'));assert.ok(css.includes('width:100%'));assert.ok(css.includes('height:100svh'));
  assert.ok(!home.includes('gtp217-hit'));
 });

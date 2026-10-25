@@ -14,7 +14,7 @@ test('Clean two-Mirage artwork bundled and displayed without painted UI or dupli
 test('Live controls retain real five modes and wheel',()=>{
  const b=app.slice(app.indexOf('function home(){'),app.indexOf('function homeLegacy(){'));
  for(const m of ['classic','pixel','quote','ability','emoji'])assert.ok(b.includes("'"+m+"'"));
- assert.ok(b.includes("'home-daily'")&&b.includes('data-action="intel-open"'));
+ assert.ok(b.includes('todayHub(')&&b.includes('data-action="intel-open"'));
  assert.ok(b.includes('data-action="wheel"')&&app.includes('data-action="leaderboard"'));
  assert.ok(app.includes('data-action="audio"')&&app.includes('data-action="profile"'));
 });

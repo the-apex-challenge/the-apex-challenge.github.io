@@ -17,7 +17,7 @@ test('game mode cards real HTML and correct five actions, no cropped screenshot 
 });
 test('both daily checkpoints and all main interactive surfaces wired',()=>{
  for(const action of ['intel-open','wheel'])assert.ok(home.includes(`data-action="${action}"`));
- assert.ok(home.includes("'home-daily'")&&home.includes('playContext(session')&&app.includes('data-action="home-session"')); 
+ assert.ok(home.includes('todayHub(')&&home.includes('todayHub(')&&app.includes('data-action="home-session"'));
  assert.ok(home.includes('gtp219-rewards'));assert.ok(home.includes('tac258-portrait'));assert.ok(app.includes('data-action="leaderboard"'));assert.ok(app.includes('data-action="profile"'));
 });
 test('browse portraits use verified local full-body sources where available',()=>{

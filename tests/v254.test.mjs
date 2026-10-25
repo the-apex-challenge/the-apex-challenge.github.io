@@ -63,3 +63,7 @@ test('failed public ranking RPC surfaces an error without presenting an empty su
  const {mod,dispose}=await leaderboardWith(sdk);
  try{await assert.rejects(mod.getBoards('2026-10-19'),/Temporarily offline/);}finally{dispose();}
 });
+test('weekly ranking RPCs keep separate Daily and Trivia totals and pass the requested UTC date',async()=>{
+ const calls=[];const sdk={rpc:async(name,args)=>{calls.push({name,args});return {data:[{score:name.includes('trivia')?80:1000}],error:null};}};
+ const {mod,dispose}=await leaderboardWith(sdk);try{const daily=await mod.getBoards('2026-10-25'),trivia=await mod.getTriviaBoards('2026-10-25');assert.equal(daily.weekly[0].score,1000);assert.equal(trivia.weekly[0].score,80);assert.equal(calls.find(c=>c.name==='get_weekly_leaderboard').args.p_day,'2026-10-25');assert.equal(calls.find(c=>c.name==='get_trivia_weekly_leaderboard').args.p_day,'2026-10-25');}finally{dispose();}
+});

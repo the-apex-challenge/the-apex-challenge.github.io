@@ -16,7 +16,7 @@ function homeMarkup({session='daily',full=false,signal=false,trivia=false}={}){
  portrait:()=>'<span class="test-portrait"></span>',playContext:()=>'<section class="only-play-selector"></section>'};
  return vm.runInNewContext(fn('home','homeLegacy')+'home()',context);
 }
-test('completed Daily cards and Trivia grey out; Free Play remains available',()=>{const days={};const c=chooseDaily265(days,'2026-10-20','signal',roster265);c.round.finished=true;assert.equal(chooseDaily265(days,'2026-10-20','full',roster265),c);assert.ok(app.includes('DAILY COMPLETED'));assert.ok(app.includes('FREE PLAY · UNRANKED'));});
+test('Daily choice remains locked while all Free Play modes remain available',()=>{const days={};const c=chooseDaily265(days,'2026-10-20','signal',roster265);c.round.finished=true;assert.equal(chooseDaily265(days,'2026-10-20','full',roster265),c);assert.ok(app.includes('todayHub('));assert.ok(app.includes('FREE PLAY · UNRANKED'));});
 test('every guessing mode renders six real scanner traits and one session status',()=>{
  for(const active of ['classic','pixel','quote','ability','emoji']){
   const round=newRound('Mirage','full');const host={slug:'mirage',name:'MIRAGE'};
