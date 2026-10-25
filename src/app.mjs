@@ -1,3 +1,4 @@
+import {pixelPortraitSources} from './pixel_portraits281.mjs?v=2.81.0';
 import {todayHub,statsPanel,archivePanel,resultPanel,tutorialPanel} from './experience280.mjs?v=2.80.0';
 import {collectedIntel,dailyShare,resetCountdown} from './progress280.mjs?v=2.80.0';
 const MODE_SYMBOLS267={"classic":"<path d=\"M18 3 33 33H24L18 18 12 33H3Z\"/><path d=\"m13 27 5-9 5 9\"/>","pixel":"<path d=\"M5 5h9v9H5zm17 0h9v9h-9zM5 22h9v9H5zm17 0h9v9h-9z\"/><path d=\"M14 14h8v8h-8\"/>","quote":"<path d=\"M6 20h8V9H6v11l-3 7h7zm17 0h8V9h-8v11l-3 7h7\"/>","ability":"<path d=\"m18 3 4 11 11 4-11 4-4 11-4-11L3 18l11-4Z\"/><path d=\"M18 9v18M9 18h18\"/>","emoji":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M11 22q7 8 14 0M12 12h1m10 0h1\"/>","trivia":"<circle cx=\"18\" cy=\"18\" r=\"14\"/><path d=\"M4 18h28M18 4q-13 14 0 28M18 4q13 14 0 28M7 10h22M7 26h22\"/>"};
@@ -9,7 +10,7 @@ import {localPortraitFiles} from './portrait_media_manifest.mjs?v=2.43.0';
 import {abilityCandidates,localAbilitySlugs} from './abilities.mjs?v=2.43.0';
 import {dailySpotlight,wheelChoices,wheelPick,destinationRotation} from './spotlight.mjs?v=2.43.0';
 import {playSound} from './audio.mjs?v=2.43.0&release=2.44.0&ui=2.62.0';
-import {paintPixelScene} from './pixel_scene.mjs?v=2.43.0&ui=2.63.0';
+import {paintPixelScene} from './pixel_scene.mjs?v=2.43.0&ui=2.81.0';
 import {getBoards, submitDaily, triviaRequest, getTriviaBoards, leaderboardConfigured} from './leaderboard.mjs?v=2.43.0&release=2.54.0&ui=2.80.0&ui=2.80.0';
 import {dailySummary, buildSubmission} from './scoring.mjs?v=2.43.0&ui=2.78.0';
 import {DAILY_TRACKS,dailySchedule,dailyAnswers,currentDailyRounds,checkpointCount,dailyStats,rewardFor,intelFor,nextDailyStep} from './daily218.mjs?v=2.43.0&release=2.60.0&ui=2.65.0';
@@ -136,7 +137,7 @@ function randomPractice(mode=active){
   const last=store.practice[mode]?.answer;
   const pool=legends.filter(l=>l.name!==last&&(mode!=='ability'||localAbilitySlugs.includes(l.slug)));
   store.practice[mode]=newRound(pool[Math.floor(Math.random()*pool.length)].name,store.settings.playStyle,store.settings.rush?120:0);
-  sync();session='unlimited';active=mode;screen='game';pickerOpen=false;render();sound('nav');
+  session='unlimited';store.settings.session='unlimited';sync();active=mode;screen='game';pickerOpen=false;quickSearch='';render();sound('nav');
 }
 function portrait(slug,{alt='',cls='',concealed=false,eager=false}={}) {
   // Images are not embedded in HTML. The loader tries each real-character source.
@@ -155,7 +156,7 @@ function loadPortraitImages(parent=app){
     const hostSource=isHostArt?reliableIconFallbacks[slug]:null;
     const preferredFullBody=isSceneArt?[...(localFile?[`./assets/portraits/${localFile}`]:[]),...sourceCatalog.filter(url=>!url.includes('moeneri/astrbot_plugin_apexrankwatch/'))]:[];
     const fastPixelSources=inPixelPuzzle?[...(localFile?[`./assets/portraits/${localFile}`]:[]),...(reliableIconFallbacks[slug]?[reliableIconFallbacks[slug]]:[])]:[];
-    const candidates=[...new Set([...fastPixelSources,...(isSceneArt?preferredFullBody:[]),...(hostSource?[hostSource]:[]),...(localFile?[`./assets/portraits/${localFile}`]:[]),...sourceCatalog])];let index=0;
+    const candidates=inPixelPuzzle?pixelPortraitSources(slug):[...new Set([...fastPixelSources,...(isSceneArt?preferredFullBody:[]),...(hostSource?[hostSource]:[]),...(localFile?[`./assets/portraits/${localFile}`]:[]),...sourceCatalog])];let index=0;
     const next=()=>{
       if(index>=candidates.length){
         const box=image.closest('.portrait-holder');
@@ -248,7 +249,7 @@ function edgeArenaDecor(){
 // The character is painted only once inside the backdrop art. No artificial gaze overlay.
 function nav(){const nick=savedNickname();return `<header class="top gtp2-top"><div class="gtp2-top-inner">
   <button class="brand gtp2-brand gtp221-unified-brand" data-action="home" aria-label="The Apex Challenge home"><span class="gtp219-logo-emblem" aria-hidden="true"><svg viewBox="0 0 64 72" width="38" height="44" fill="none"><path d="M32 3 61 64H44L31 30 20 64H3L32 3Z" fill="currentColor"/><path d="M23 51h19l5 11H18l5-11Z" fill="#071222"/></svg></span><span class="gtp219-brand-type">THE APEX<strong>CHALLENGE</strong></span></button>
-  <nav class="topnav" aria-label="Main navigation"><button class="nav-item ${screen==='home'?'active':''}" data-action="home">⌂ HOME</button><button class="nav-item ${screen==='trivia'?'active':''}" data-action="trivia">✦ TRIVIA</button><button class="nav-item ${screen==='game'?'active':''}" data-action="open" data-mode="classic">◈ PLAY</button><button class="nav-item ${screen==='leaderboard'?'active':''}" data-action="leaderboard">♛ RANKINGS</button><button class="nav-item ${screen==='records'?'active':''}" data-action="records">▤ STATS</button><button class="nav-item ${screen==='howto'?'active':''}" data-action="howto">? HOW TO PLAY</button><button class="nav-item ${screen==='faq'?'active':''}" data-action="faq">◉ FAQ</button></nav>
+  <nav class="topnav" aria-label="Main navigation"><button class="nav-item ${screen==='home'?'active':''}" data-action="home">⌂ HOME</button><button class="nav-item ${screen==='trivia'?'active':''}" data-action="trivia">✦ TRIVIA</button><button class="nav-item ${screen==='game'?'active':''}" data-action="open" data-mode="classic">∞ FREE PLAY</button><button class="nav-item ${screen==='leaderboard'?'active':''}" data-action="leaderboard">♛ RANKINGS</button><button class="nav-item ${screen==='records'?'active':''}" data-action="records">▤ STATS</button><button class="nav-item ${screen==='howto'?'active':''}" data-action="howto">? HOW TO PLAY</button><button class="nav-item ${screen==='faq'?'active':''}" data-action="faq">◉ FAQ</button></nav>
   <details class="gtp213-mobile-menu"><summary aria-label="Open site navigation">☰</summary><div class="gtp213-mobile-links"><button data-action="home" type="button">⌂ HOME</button><button data-action="trivia" type="button">✦ TRIVIA</button><button data-action="open" data-mode="classic" type="button">◈ PLAY</button><button data-action="leaderboard" type="button">♛ RANKINGS</button><button data-action="records" type="button">▤ STATS</button><button data-action="howto" type="button">? HOW TO PLAY</button><button data-action="faq" type="button">◉ FAQ</button></div></details>
   <div class="top-actions"><button class="switch gtp237-settings-switch" type="button" data-action="settings">⚙ SETTINGS</button><button class="switch gtp2-profile-switch" data-action="profile" aria-label="Choose nickname">${nick?`◉ ${esc(nick)}`:'◎ NICKNAME'}</button><button class="switch gtp2-sound-switch" data-action="audio" aria-label="Toggle sound" aria-pressed="${store.settings.audio}">${store.settings.audio?'♫ FX ON':'♪ FX OFF'}</button></div>
  </div></header>`;}
@@ -440,17 +441,17 @@ function getVisual(round,target){
   const mode=active;
   if(mode==='pixel'){
     const effect='soft';
-    const step=round.won?6:Math.min(round.guesses.length,6);
+    const step=round.finished?6:Math.min(round.guesses.length,5);
     // Pixelate and blur the FULL COMPOSITE SCENE (location, lights, character), not a lone cutout.
     const sizes=[9,10,12,16,23,36,900];
     const blur=effect==='soft'?[2.8,2.5,2.1,1.6,1.1,.6,0]:effect==='holo'?[18,16,13,9,6,3,0]:[16,14,11,8,5,2,0];
     const pct=[6,15,28,46,66,84,100];
     const size=sizes[step];
-    return `<div class="clue-visual visual-pixel px-effect-${effect} nova-pixel-scene ${round.won?'pixel-revealed':''}"><div class="pixel-art" style="--px-blur:${blur[step]}px;--px-progress:${pct[step]}%">
-      <canvas class="pixel-canvas" data-resolution="${size}" width="${size}" height="${size}" aria-label="${round.won?esc(target.name)+' fully revealed':'Progressively decrypted full scene featuring a Legend'}"></canvas>
+    return `<div class="clue-visual visual-pixel px-effect-${effect} nova-pixel-scene ${round.finished?'pixel-revealed':''}"><div class="pixel-art" style="--px-blur:${blur[step]}px;--px-progress:${pct[step]}%">
+      <canvas class="pixel-canvas" data-resolution="${size}" width="${size}" height="${size}" aria-label="${round.finished?esc(target.name)+' fully revealed':'Progressively decrypted full scene featuring a Legend'}"></canvas>
       ${portrait(target.slug,{alt:'',cls:'pixel-source',concealed:!round.finished,eager:true})}
       <div class="pixel-fallback" role="group" aria-label="Offline character identity clues"><span class="pixel-fallback-kicker">◈ BACKUP INTEL / SIGNAL RECOVERY</span><div class="pixel-fallback-emblem">${step>=4?esc((target.emoji.split(/\s+/)[0]||'◇')):'?'}</div><strong>${step>=3?esc(target.role.toUpperCase()):'CLASSIFIED ROLE'}</strong><p>${step>=5?esc(target.title):'IDENTITY PROFILE ENCRYPTED'}</p><small>${step>=6?esc(target.signature):'ADDITIONAL INTEL UNLOCKS AFTER GUESSES'}</small></div><div class="pixel-error" aria-hidden="true"></div><div class="pixel-scratch scratch-a"></div><div class="pixel-scratch scratch-b"></div><div class="pixel-scan"></div><div class="pixel-vignette"></div>
-      </div><div class="pixel-dots"></div><div class="pixel-caption">${round.won?esc(target.name).toUpperCase()+' · FULLY REVEALED':'DECRYPTION '+pct[step]+'% · '+(maxGuesses(round)-round.guesses.length)+' MOVES LEFT'}</div>${round.won?'<button type="button" class="tac-pixel-full" data-action="pixel-full" aria-expanded="false">VIEW FULL IMAGE ↗</button>':''}</div>`;
+      </div><div class="pixel-dots"></div><div class="pixel-caption">${round.finished?esc(target.name).toUpperCase()+' · FULLY REVEALED':'DECRYPTION '+pct[step]+'% · '+(maxGuesses(round)-round.guesses.length)+' MOVES LEFT'}</div>${round.finished?'<button type="button" class="tac-pixel-full" data-action="pixel-full" aria-expanded="false">VIEW FULL IMAGE ↗</button>':''}</div>`;
   }
   if(mode==='quote')return `<div class="clue-visual gtp2-quote-rework gtp29-quote-visual"><div class="gtp2-quote-head"><span>◈ WRITTEN CLUE / NO VOICE IMPERSONATION</span><span>CHANNEL 0${MODES.indexOf(active)+1}</span></div><div class="gtp29-quote-card"><blockquote>“${esc(target.quote)}”</blockquote><div class="gtp29-quote-footer"><span class="gtp2-live-dot"></span><b>SPEAKER UNKNOWN</b><small>Use class, age and launch comparisons to narrow it down.</small></div></div></div>`;
   if(mode==='ability')return `<div class="clue-visual visual-ability gtp210-ability-stage" aria-label="Ability icon puzzle">
@@ -663,7 +664,7 @@ function cinematicControls(round,target){
     ${session==='unlimited'?`<button type="button" data-action="free-next" class="gtp230-btn gtp230-btn-main">NEXT: ${esc(nextFreeMode(active).toUpperCase())} ↗</button>`:''}
     <button type="button" data-action="home" class="gtp230-btn gtp230-btn-secondary">BACK TO MODES</button>
    </div>
-   ${session==='daily'?intelReadyMarkup(1):''}
+   ${session==='daily'?intelReadyMarkup(1):'<p class="gtp281-practice-note">FREE PLAY RESULT · Continue to the next mode or play again.</p>'}
   </section>`;
  }
  const remaining=maxGuesses(round)-round.guesses.length;
@@ -1251,7 +1252,7 @@ app.addEventListener('click',event=>{
   else if(action==='scroll-extras'){document.getElementById('home-extras')?.scrollIntoView({behavior:store.settings.motion?'smooth':'instant'});}
   else if(action==='board-tab'){boardTab=button.dataset.board;render({scroll:false});if(!boardData)void refreshBoards();}
   else if(action==='choose-daily'){if(!DAILY_RULES[button.dataset.track])return;const chosen=chooseDaily(store.days,today(),button.dataset.track,legends);dailyTrack=chosen.track;sync();openMode(chosen.gameMode,'daily');if(!store.settings.scannerGuideSeen){tutorialOpen=true;render({scroll:false});}}
-  else if(action==='open'){if(!button.dataset.session&&session==='daily')beginDaily();else openMode(button.dataset.mode,button.dataset.session||'unlimited');}
+  else if(action==='open'){openMode(button.dataset.mode,button.dataset.session||'unlimited');}
   else if(action==='home-full'||action==='home-signal'){beginDaily();}
   else if(action==='home-rush'){
     store.settings.rush=true;store.settings.playStyle='signal';
@@ -1272,7 +1273,7 @@ app.addEventListener('click',event=>{
   else if(action==='picker'){pickerOpen=true;pickerSearch='';pickerClass='All';pickerSort='az';renderPicker();sound('pick');}
   else if(action==='close-picker'){pickerOpen=false;document.getElementById('picker-backdrop')?.remove();}
   else if(action==='preview-legend'){showLegendPreview(button.dataset.previewSlug);sound('pick');}
-  else if(action==='pixel-full'){const scene=button.closest('.visual-pixel');if(!getRound()?.won||!scene)return;const expanded=scene.classList.toggle('tac-pixel-expanded');button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'COMPACT IMAGE ↙':'VIEW FULL IMAGE ↗';}
+  else if(action==='pixel-full'){const scene=button.closest('.visual-pixel');if(!getRound()?.finished||!scene)return;const expanded=scene.classList.toggle('tac-pixel-expanded');button.setAttribute('aria-expanded',String(expanded));button.textContent=expanded?'COMPACT IMAGE ↙':'VIEW FULL IMAGE ↗';}
   else if(action==='guess'){submitGuess(button.dataset.name);}
   else if(action==='submit-search'){
     const query=document.getElementById('guess-search')?.value||'';
